@@ -1,0 +1,10 @@
+# FastAPI + model yükleme (Docker / Render). Notebook/Jupyter yok — çakışmasız kurulum.
+fastapi>=0.115,<0.137
+uvicorn[standard]>=0.30,<0.46
+joblib>=1.4,<1.6
+numpy>=2.0,<3
+pandas>=2.2,<4
+scikit-learn>=1.5,<1.9
+scipy>=1.11,<2
+xgboost>=2.0,<4
+lightgbm>=4.0,<5
