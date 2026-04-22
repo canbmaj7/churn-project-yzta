@@ -1,0 +1,18 @@
+# Sanal ortam
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE / OS
+.env
+.DS_Store
+Thumbs.db
+*.log
