@@ -49,7 +49,10 @@ churn-project-yzta/   (kök klasör adı sürüme göre değişebilir)
 ├── Dockerfile.streamlit       ← arayüz imajı
 ├── docker-compose.yml         ← api + streamlit
 │
-├── requirements.txt
+├── requirements.txt          ← Streamlit Cloud / hafif kurulum (streamlit + httpx)
+├── requirements-dev.txt      ← Jupyter + notebook + tam ML yığını
+├── requirements-api.txt      ← Docker / Render API imajı
+├── requirements-streamlit.txt
 ├── README.md
 ├── ROADMAP.md
 ├── FINDINGS.md
@@ -87,6 +90,14 @@ source venv/bin/activate
 
 ### 3. Bağımlılıkları Yükle
 
+**Notebook, EDA ve model eğitimi** (tam liste):
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+**Yalnızca Streamlit arayüzü** (Streamlit Cloud ile aynı minimal set):
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -116,6 +127,8 @@ Sırayla şu notebook'ları çalıştır:
 Repoda `train_test_split.pkl` varsa doğrudan `03` ile başlayabilirsin; veri veya kod değiştirdiysen `02`'yi yeniden çalıştır.
 
 ### API'yi başlat
+
+Önce: `pip install -r requirements-api.txt` (veya notebook ortamı için `requirements-dev.txt`).
 
 Proje kökünden (sanal ortam açıkken):
 
