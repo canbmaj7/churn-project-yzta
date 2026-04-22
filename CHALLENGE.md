@@ -68,7 +68,3 @@ Model geliştirme sürecinden sonra, bu modelin bir servis haline getirilmesi ge
 ## SONUÇ
 
 Bu çalışma, katılımcıların yalnızca model geliştirme becerisini değil, aynı zamanda bir makine öğrenmesi çözümünü uçtan uca bir sisteme dönüştürme yeteneğini ölçmeyi amaçlamaktadır.
-
----
-
-*Bu proje kopyasının yerel yolu: `C:\Users\Can\Desktop\data\churn-project-yzta 1`.*

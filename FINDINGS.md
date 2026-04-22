@@ -3,7 +3,26 @@
 > Bu dosya proje boyunca yapılan çalışmaları ve elde edilen bulguları özetler.
 > Her aşama tamamlandıkça güncellenir.
 
-**Yerel proje yolu:** `C:\Users\Can\Desktop\data\churn-project-yzta 1` (yolda boşluk var; `cd` ile tırnak kullan).
+### Güncel proje ağacı (özet)
+
+Ayrıntılı açıklama için `ROADMAP.md` içinde "Aşama 1 — Klasör Yapısı" bölümüne bakılabilir.
+
+```
+churn-project-yzta 2/
+├── data/
+│   ├── WA_Fn-UseC_-Telco-Customer-Churn.xls
+│   └── processed/train_test_split.pkl
+├── notebooks/          (01_eda, 02_preprocessing, 03_modeling)
+├── models/
+│   ├── best_model.pkl
+│   ├── model_registry.json
+│   └── saved/          (*.joblib — tüm eğitilmiş modeller)
+├── requirements.txt
+├── CHALLENGE.md
+├── FINDINGS.md
+├── ROADMAP.md
+└── .gitignore
+```
 
 ---
 
@@ -11,8 +30,8 @@
 **Tarih:** 14 Nisan 2026
 
 ### Yapılanlar:
-- Proje klasör yapısı oluşturuldu (`data/`, `notebooks/`, `src/`, `models/`, `api/`)
-- Python sanal ortamı (`venv`) kuruldu ve aktive edildi
+- Proje klasör yapısı oluşturuldu (`data/`, `notebooks/`, `models/`; bu kopyada `src/`, `api/` ve `scripts/` yok)
+- Python sanal ortamı (`.venv`) kuruldu ve aktive edildi
 - Gerekli kütüphaneler yüklendi ve `requirements.txt` dosyasına kaydedildi
 - Git deposu başlatıldı, `.gitignore` oluşturuldu
 - İlk commit atıldı: `initial project structure`
@@ -119,7 +138,7 @@ Modelin en çok yararlanacağı değişkenler şunlar olabilir:
 
 ## AŞAMA 3 — Veri Ön İşleme ✅
 **Tarih:** 15 Nisan 2026  
-**Dosyalar:** `notebooks/02_preprocessing.ipynb`, `data/processed/train_test_split.pkl`, `scripts/rebuild_eda_preprocessing.py`
+**Dosyalar:** `notebooks/02_preprocessing.ipynb`, `data/processed/train_test_split.pkl`
 
 ### Yapılanlar:
 - `customerID` kaldırıldı; `TotalCharges` sayısala çevrildi, eksikler 0 ile dolduruldu
@@ -134,17 +153,40 @@ Modelin en çok yararlanacağı değişkenler şunlar olabilir:
 
 ---
 
-## Sonraki Adımlar
+## AŞAMA 4 — Model Geliştirme ve Karşılaştırma ✅
+**Dosya:** `notebooks/03_modeling.ipynb`
 
-### AŞAMA 4 — Model Geliştirme ⬜
-- [ ] `03_modeling.ipynb`: en az 3 model (ör. Logistic Regression, Random Forest, XGBoost)
-- [ ] Metrikler: recall, F1, ROC-AUC, confusion matrix (accuracy tek başına yeterli değil)
-- [ ] En iyi modeli seç ve `models/best_model.pkl` kaydet
+**Karşılaştırılan modeller** (tümü eğitildi; ayrıntılar `models/model_registry.json`):
 
-### AŞAMA 5 — API ⬜
-- [ ] FastAPI `/predict`
-- [ ] Test
+| Model | Test Accuracy | Precision | Recall | F1 | ROC-AUC |
+|-------|--------------|-----------|--------|-----|---------|
+| LogisticRegression | 0.7381 | 0.5043 | 0.7834 | 0.6136 | 0.8417 |
+| RandomForest | 0.7743 | 0.5636 | 0.6631 | 0.6093 | 0.8390 |
+| GradientBoosting | 0.7984 | 0.6471 | 0.5294 | 0.5824 | 0.8419 |
+| **XGBoost** | 0.7608 | 0.5345 | 0.7674 | **0.6301** | 0.8367 |
+| LightGBM | 0.7502 | 0.5199 | 0.7674 | 0.6199 | 0.8344 |
+
+**Seçim kriteri:** F1 skoru en yüksek olan model → **XGBoost** (`best_model_key` ve `models/best_model.pkl` / `models/saved/XGBoost.joblib`).
 
 ---
 
-*Son güncelleme: Aşama 3 tamamlandı — GitHub: [canbmaj7/churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)*
+## AŞAMA 5 — En İyi Modeli Kaydetme ✅
+
+- `models/saved/*.joblib` — her modelin ayrı dosyası
+- `models/best_model.pkl` — dağıtım için seçilen (XGBoost) model
+- `model_registry.json` — özellik sütunları, `random_state`, metrikler ve en iyi model yolu
+
+---
+
+## Sonraki Adımlar
+
+### AŞAMA 6 — API servisi ⬜
+- [ ] `api/app.py` (FastAPI) ve `/predict` endpoint
+- [ ] Uvicorn ile çalıştırma testi
+
+### AŞAMA 7 — Dokümantasyon ⬜
+- [ ] Kökte `README.md` (kurulum, kullanım, klasör yapısı)
+
+---
+
+*Son güncelleme: Aşamalar 1–5 bu kopya ile uyumlu; sırada API ve README. GitHub: [canbmaj7/churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)*
