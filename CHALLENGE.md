@@ -73,4 +73,4 @@ Bu çalışma, katılımcıların yalnızca model geliştirme becerisini değil,
 
 ## Bu depo ile uyum (durum notu)
 
-Orijinal metin yukarıdaki gereksinimleri tanımlar. Bu depoda: EDA ve ön işleme notebook’ları, çoklu model karşılaştırması, `model_registry.json` / kayıtlı modeller, **FastAPI** (`api/app.py`, `POST /predict`) ve kök **dokümantasyon** (`README.md` vb.) mevcut **challenge kapsamındaki** çekirdek beklentileri karşılayacak şekilde ilerletilmiştir. Opsiyonel maddeler (Docker, ayrı bir arayüz) bu metinde olduğu gibi zorunlu değildir.
+Orijinal metin yukarıdaki gereksinimleri tanımlar. Bu depoda: EDA ve ön işleme notebook’ları, çoklu model karşılaştırması, `model_registry.json` / kayıtlı modeller, **FastAPI** (`api/app.py`: `GET /`, `POST /predict`, `POST /predict/raw`; `api/preprocess.py` ile sunucu tarafı ön işleme), **Streamlit** arayüzü (`streamlit_app.py` → `/predict/raw`), **Docker** (`Dockerfile`, `Dockerfile.streamlit`, `docker-compose.yml`) ve kök **dokümantasyon** (`README.md`, `ROADMAP.md`, `FINDINGS.md`) ile challenge çekirdeği ve opsiyonel maddeler uygulanmış durumdadır.

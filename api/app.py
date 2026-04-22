@@ -1,19 +1,23 @@
 """
 Churn tahmin API — en iyi modeli `models/model_registry.json` üzerinden yükler.
-Tahmin girdisi, ön işleme sonrası sütun adlarıyla uyumlu bir JSON olmalıdır
-(özellik sırası `feature_columns` ile aynı).
+
+- ``POST /predict`` — ön işlenmiş 30 özellik (``feature_columns`` ile aynı anahtarlar).
+- ``POST /predict/raw`` — ham Telco alanları; ``data/processed/train_test_split.pkl``
+  içindeki ``scaler`` ile aynı ön işleme uygulanır.
 """
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import joblib
 import numpy as np
 from fastapi import Body, FastAPI, HTTPException
 
-app = FastAPI(title="Churn API", version="1.0.0")
+from .preprocess import RAW_API_FIELDS, preprocess_bundle_available, raw_customer_to_feature_dict
+
+app = FastAPI(title="Churn API", version="1.1.0")
 
 
 def _models_dir() -> Path:
@@ -90,32 +94,30 @@ def _predict_body_openapi_example() -> dict[str, float | int]:
 
 _PREDICT_EXAMPLE = _predict_body_openapi_example()
 
+_RAW_BODY_EXAMPLE: dict[str, Any] = {
+    "gender": "Female",
+    "SeniorCitizen": 0,
+    "Partner": "Yes",
+    "Dependents": "No",
+    "tenure": 12,
+    "PhoneService": "Yes",
+    "MultipleLines": "No",
+    "InternetService": "Fiber optic",
+    "OnlineSecurity": "No",
+    "OnlineBackup": "No",
+    "DeviceProtection": "No",
+    "TechSupport": "No",
+    "StreamingTV": "Yes",
+    "StreamingMovies": "Yes",
+    "Contract": "Month-to-month",
+    "PaperlessBilling": "Yes",
+    "PaymentMethod": "Electronic check",
+    "MonthlyCharges": 70.35,
+    "TotalCharges": 843.15,
+}
 
-@app.get("/")
-def health():
-    return {
-        "status": "ok",
-        "best_model": _registry.get("best_model_key"),
-        "n_features": len(FEATURE_COLUMNS),
-    }
 
-
-@app.post("/predict")
-def predict(
-    features: Annotated[
-        dict[str, float | int | bool],
-        Body(
-            openapi_examples={
-                "on_islenmis": {
-                    "summary": "Ön işlenmiş tek müşteri (30 alan)",
-                    "description": "Anahtarlar `model_registry.json` → `feature_columns` ile birebir aynı olmalıdır.",
-                    "value": _PREDICT_EXAMPLE,
-                },
-            },
-        ),
-    ],
-):
-    """Girdi: ön işlenmiş tek satır — anahtarlar `feature_columns` ile aynı (30 alan)."""
+def _predict_from_feature_dict(features: dict[str, float | int | bool]) -> dict:
     missing = [c for c in FEATURE_COLUMNS if c not in features]
     if missing:
         raise HTTPException(
@@ -137,3 +139,70 @@ def predict(
         ),
         "model_used": _registry.get("best_model_key"),
     }
+
+
+@app.get("/")
+def health():
+    return {
+        "status": "ok",
+        "best_model": _registry.get("best_model_key"),
+        "n_features": len(FEATURE_COLUMNS),
+        "preprocess_bundle_available": preprocess_bundle_available(),
+    }
+
+
+@app.post("/predict")
+def predict(
+    features: Annotated[
+        dict[str, float | int | bool],
+        Body(
+            openapi_examples={
+                "on_islenmis": {
+                    "summary": "Ön işlenmiş tek müşteri (30 alan)",
+                    "description": "Anahtarlar `model_registry.json` → `feature_columns` ile birebir aynı olmalıdır.",
+                    "value": _PREDICT_EXAMPLE,
+                },
+            },
+        ),
+    ],
+):
+    """Girdi: ön işlenmiş tek satır — anahtarlar `feature_columns` ile aynı (30 alan)."""
+    return _predict_from_feature_dict(features)
+
+
+@app.post("/predict/raw")
+def predict_raw(
+    customer: Annotated[
+        dict[str, Any],
+        Body(
+            openapi_examples={
+                "telco_ornek": {
+                    "summary": "Ham Telco müşteri satırı",
+                    "description": f"Zorunlu alanlar: {', '.join(RAW_API_FIELDS)}",
+                    "value": _RAW_BODY_EXAMPLE,
+                },
+            },
+        ),
+    ],
+):
+    """
+    Ham kategorik/sayısal Telco alanları (notebook 02 ile aynı sözleşme).
+    `train_test_split.pkl` yoksa 503 döner.
+    """
+    if not preprocess_bundle_available():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Ön işleme paketi yok. `data/processed/` altında `preprocess_artifacts.pkl` veya "
+                "`train_test_split.pkl` olmalı (02_preprocessing.ipynb çıktısı)."
+            ),
+        )
+    try:
+        features = raw_customer_to_feature_dict(customer, FEATURE_COLUMNS)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    out = _predict_from_feature_dict(features)
+    out["input_mode"] = "raw"
+    return out

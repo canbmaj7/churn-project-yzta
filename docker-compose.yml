@@ -1,0 +1,25 @@
+# Proje kökünde: docker compose up --build
+# API: http://localhost:8000  |  Arayüz: http://localhost:8501
+# Gerekli: ./models (registry + joblib) ve ./data/processed/train_test_split.pkl
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models:ro
+      - ./data/processed:/app/data/processed:ro
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE: http://api:8000
+    depends_on:
+      - api

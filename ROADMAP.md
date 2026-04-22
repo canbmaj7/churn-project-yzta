@@ -15,8 +15,8 @@
 | 5 | En İyi Modeli Kaydetme | ✅ |
 | 6 | API Servisi Geliştirme | ✅ |
 | 7 | Dokümantasyon | ✅ |
-| 8 | (Opsiyonel) Docker | ⬜ |
-| 9 | (Opsiyonel) Basit Arayüz | ⬜ |
+| 8 | Docker | ✅ |
+| 9 | Basit Arayüz (Streamlit) | ✅ |
 
 ---
 
@@ -32,7 +32,8 @@ churn-project-yzta/            ← proje kökü (klasör adı kopyaya göre değ
 ├── data/
 │   ├── WA_Fn-UseC_-Telco-Customer-Churn.xls   ← ham veri
 │   └── processed/
-│       └── train_test_split.pkl               ← 02_preprocessing sonrası
+│       ├── train_test_split.pkl               ← 02_preprocessing sonrası (/predict/raw)
+│       └── preprocess_artifacts.pkl           ← isteğe bağlı (varsa öncelikli)
 │
 ├── notebooks/
 │   ├── 01_eda.ipynb          ← Keşifsel Veri Analizi
@@ -51,7 +52,13 @@ churn-project-yzta/            ← proje kökü (klasör adı kopyaya göre değ
 │       └── LightGBM.joblib
 │
 ├── api/
-│   └── app.py                ← FastAPI: GET `/`, POST `/predict`
+│   ├── app.py                ← FastAPI: GET `/`, POST `/predict`, POST `/predict/raw`
+│   └── preprocess.py         ← ham Telco → feature_columns (02 ile uyumlu)
+│
+├── streamlit_app.py          ← Streamlit UI → `/predict/raw`
+├── Dockerfile
+├── Dockerfile.streamlit
+├── docker-compose.yml        ← api + streamlit (models + data/processed volume)
 │
 ├── requirements.txt
 ├── README.md
@@ -61,7 +68,7 @@ churn-project-yzta/            ← proje kökü (klasör adı kopyaya göre değ
 └── ROADMAP.md
 ```
 
-Ön işleme ve model adımları `notebooks/` altında. `api/app.py` ile Aşama 6 tamamlandı. Bu depoda ayrı bir `src/` veya `scripts/` klasörü yok. Sanal ortam (örn. `venv/`, `.venv/`) yerelde bulunur; `.gitignore` ile dışlanır, ağaçta gösterilmez.
+Ön işleme ve model adımları `notebooks/` altında. `api/app.py` ve `api/preprocess.py` ile ham/ön işlenmiş iki tahmin yolu desteklenir. Bu depoda ayrı bir `src/` veya `scripts/` klasörü yok. Sanal ortam (örn. `venv/`, `.venv/`) yerelde bulunur; `.gitignore` ile dışlanır, ağaçta gösterilmez.
 
 ### 1.2 Sanal Ortam ve Bağımlılıklar
 
@@ -288,69 +295,33 @@ Eğer churn oranı çok düşükse (örn. %15-20 gibi) şunları dene:
 
 ## AŞAMA 6 — API Servisi Geliştirme
 
-`api/app.py` dosyasını oluştur.
+`api/app.py` ve `api/preprocess.py` dosyaları.
 
 ### 6.1 Framework Seçimi
 
-**FastAPI** tercih edilir (otomatik dokümantasyon + modern):
-```
-pip install fastapi uvicorn
-```
+**FastAPI** (otomatik dokümantasyon + modern): `fastapi`, `uvicorn`
 
-Alternatif olarak **Flask** de kullanılabilir.
-
-### 6.2 API Yapısı
-
-API'nin en az şu endpoint'leri içermesi gerekir:
+### 6.2 API Yapısı (bu depo)
 
 | Endpoint | Method | Açıklama |
 |----------|--------|----------|
-| `/` | GET | API sağlık kontrolü, "API çalışıyor" mesajı |
-| `/predict` | POST | Müşteri bilgilerini alır, churn tahmini döner |
+| `/` | GET | Sağlık; `best_model`, `n_features`, `preprocess_bundle_available` |
+| `/predict` | POST | 30 alan — `feature_columns` ile birebir (ön işlenmiş, scaler uygulanmış) |
+| `/predict/raw` | POST | Ham Telco alanları; sunucu `preprocess.py` ile 02 ile aynı dönüşümü yapar (paket yoksa 503) |
 
-### 6.3 `/predict` Endpoint'i
+### 6.3 `/predict` ve `/predict/raw`
 
-**Not (bu depo):** `api/app.py` istemci tarafında ön işleme **beklemez**; gövde, `02_preprocessing` / `model_registry.json` içindeki `feature_columns` ile aynı 30 alanlı, sayısallaştırılmış/kukla sütunları içerir. Aşağıdaki ham alan örneği challenge şablonudur; tam örnek için `README.md` ve `/docs` şemasına bak.
+- **`/predict`:** İstemci ön işlemiş olmalı; gövde `model_registry.json` → `feature_columns` ile uyumlu.
+- **`/predict/raw`:** Ham müşteri JSON’u; örnek ve zorunlu alanlar `README.md` ve OpenAPI `/docs` içinde. Ön işleme için `data/processed/train_test_split.pkl` veya `preprocess_artifacts.pkl` gerekir.
 
-**Girdi (Input) — genel challenge örneği (ham alanlar):** Müşteri bilgilerini JSON formatında al. Örnek:
-```json
-{
-  "gender": "Female",
-  "SeniorCitizen": 0,
-  "Partner": "Yes",
-  "Dependents": "No",
-  "tenure": 12,
-  "PhoneService": "Yes",
-  "MultipleLines": "No",
-  "InternetService": "Fiber optic",
-  "OnlineSecurity": "No",
-  "OnlineBackup": "No",
-  "DeviceProtection": "No",
-  "TechSupport": "No",
-  "StreamingTV": "Yes",
-  "StreamingMovies": "Yes",
-  "Contract": "Month-to-month",
-  "PaperlessBilling": "Yes",
-  "PaymentMethod": "Electronic check",
-  "MonthlyCharges": 70.35,
-  "TotalCharges": 843.15
-}
-```
-
-**Çıktı (Output):**
-```json
-{
-  "churn_prediction": 1,
-  "churn_probability": 0.82,
-  "message": "Bu müşteri churn riski taşımaktadır."
-}
-```
+**Örnek yanıt alanları:** `churn_prediction`, `churn_probability`, `message`, `model_used`; `/predict/raw` için ek: `input_mode: "raw"`.
 
 ### 6.4 API'yi Test Et
 
-- API'yi çalıştır: `uvicorn api.app:app --reload`
-- Tarayıcıda `http://localhost:8000/docs` adresine git — otomatik Swagger dokümantasyonunu incele
-- `curl` veya Postman ile `/predict` endpoint'ini test et
+- API: `uvicorn api.app:app --reload`
+- Swagger: `http://localhost:8000/docs`
+- Streamlit: `streamlit run streamlit_app.py` (API ayrı terminalde)
+- Compose: proje kökünde `docker compose up --build`
 
 ---
 
@@ -369,48 +340,22 @@ API'nin en az şu endpoint'leri içermesi gerekir:
 
 ---
 
-## AŞAMA 8 — Docker (Opsiyonel)
+## AŞAMA 8 — Docker
 
-### 8.1 Dockerfile Oluştur
+Bu depoda:
 
-- Python base image seç (örn. `python:3.10-slim`)
-- Bağımlılıkları yükle
-- API dosyasını kopyala
-- `uvicorn` ile başlat
+- **`Dockerfile`** — Python 3.12 slim; `api/` ile API (`uvicorn api.app:app`, port 8000).
+- **`docker-compose.yml`** — `api` servisi `./models` ve `./data/processed` klasörlerini salt okunur bağlar; **`Dockerfile.streamlit`** ile `streamlit` servisi (port 8501, `API_BASE=http://api:8000`).
 
-### 8.2 docker-compose.yml (Opsiyonel)
-
-Tek komutla başlatmak için `docker-compose.yml` ekle.
-
-### 8.3 Test Et
-
-```
-docker build -t churn-api .
-docker run -p 8000:8000 churn-api
-```
+Proje kökünde: `docker compose up --build` — API [localhost:8000](http://localhost:8000), arayüz [localhost:8501](http://localhost:8501).
 
 ---
 
-## AŞAMA 9 — Basit Arayüz (Opsiyonel)
+## AŞAMA 9 — Basit Arayüz
 
-### 9.1 Seçenekler
-
-- **Streamlit** (en kolay — tamamen Python)
-- **Gradio** (ML odaklı, çok hızlı)
-- **HTML/JS** (basit bir form ile API'ye istek at)
-
-### 9.2 Streamlit ile Hızlı Arayüz
-
-```
-pip install streamlit
-```
-
-Bir `app_ui.py` dosyası oluştur. Şunları içersin:
-- Müşteri bilgilerini girmek için form alanları
-- "Tahmin Et" butonu
-- API'ye POST isteği at ve sonucu göster
-
-Çalıştır: `streamlit run app_ui.py`
+- **`streamlit_app.py`** — Form alanları, `httpx` ile `POST /predict/raw`, isteğe bağlı `API_BASE` ortam değişkeni.
+- Yerel: `streamlit run streamlit_app.py` (önce API’yi başlat).
+- Docker: `docker-compose.yml` içindeki `streamlit` servisi.
 
 ---
 
@@ -424,7 +369,7 @@ Bir `app_ui.py` dosyası oluştur. Şunları içersin:
 - [x] Model `models/` klasörüne kaydedildi mi?
 - [x] API çalışıyor ve `/predict` endpoint'i doğru cevap veriyor mu?
 - [x] `README.md` hazır mı?
-- [ ] Git commit'leri düzenli mi?
+- [x] Git commit'leri düzenli mi? (yerel akışa bağlı)
 
 ---
 
@@ -437,4 +382,4 @@ Bir `app_ui.py` dosyası oluştur. Şunları içersin:
 
 ---
 
-*Son güncelleme: Aşamalar 1–7 (yapı, EDA, ön işleme, modelleme, model kaydı, FastAPI, kök dokümantasyon) tamam; sırada isteğe bağlı Docker ve arayüz. Repo: [canbmaj7/churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)*
+*Son güncelleme: 22 Nisan 2026 — Aşamalar 1–9 tamam (FastAPI `/predict` + `/predict/raw`, Streamlit, Docker Compose). Repo: [canbmaj7/churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)*
