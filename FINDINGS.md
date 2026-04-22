@@ -8,7 +8,7 @@
 Ayrıntılı açıklama için `ROADMAP.md` içinde "Aşama 1 — Klasör Yapısı" bölümüne bakılabilir.
 
 ```
-churn-project-yzta 2/
+churn-project-yzta/     (kök adı sürüme göre değişebilir)
 ├── data/
 │   ├── WA_Fn-UseC_-Telco-Customer-Churn.xls
 │   └── processed/train_test_split.pkl
@@ -17,7 +17,10 @@ churn-project-yzta 2/
 │   ├── best_model.pkl
 │   ├── model_registry.json
 │   └── saved/          (*.joblib — tüm eğitilmiş modeller)
+├── api/
+│   └── app.py          (FastAPI: GET /, POST /predict)
 ├── requirements.txt
+├── README.md
 ├── CHALLENGE.md
 ├── FINDINGS.md
 ├── ROADMAP.md
@@ -30,7 +33,7 @@ churn-project-yzta 2/
 **Tarih:** 14 Nisan 2026
 
 ### Yapılanlar:
-- Proje klasör yapısı oluşturuldu (`data/`, `notebooks/`, `models/`; bu kopyada `src/`, `api/` ve `scripts/` yok)
+- Proje klasör yapısı oluşturuldu (`data/`, `notebooks/`, `models/`; ayrı `src/` veya `scripts/` klasörü yok; API sonradan `api/app.py` ile eklendi)
 - Python sanal ortamı (`.venv`) kuruldu ve aktive edildi
 - Gerekli kütüphaneler yüklendi ve `requirements.txt` dosyasına kaydedildi
 - Git deposu başlatıldı, `.gitignore` oluşturuldu
@@ -178,15 +181,28 @@ Modelin en çok yararlanacağı değişkenler şunlar olabilir:
 
 ---
 
-## Sonraki Adımlar
+## AŞAMA 6 — API Servisi ✅
+**Dosya:** `api/app.py`
 
-### AŞAMA 6 — API servisi ⬜
-- [ ] `api/app.py` (FastAPI) ve `/predict` endpoint
-- [ ] Uvicorn ile çalıştırma testi
-
-### AŞAMA 7 — Dokümantasyon ⬜
-- [ ] Kökte `README.md` (kurulum, kullanım, klasör yapısı)
+### Yapılanlar:
+- **FastAPI** uygulaması: `GET /` (sağlık, en iyi model adı, özellik sayısı), `POST /predict` (ön işlenmiş 30 alanlı JSON gövde; yanıtta `churn_prediction`, `churn_probability`, `message`, `model_used`)
+- Model yükleme: öncelik `models/model_registry.json` → `best_model_file`; yoksa `models/best_model.pkl`
+- Çalıştırma: `uvicorn api.app:app --reload` (proje kökünden)
+- OpenAPI: `http://localhost:8000/docs`
 
 ---
 
-*Son güncelleme: Aşamalar 1–5 bu kopya ile uyumlu; sırada API ve README. GitHub: [canbmaj7/churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)*
+## AŞAMA 7 — Dokümantasyon ✅
+- Kökte `README.md` (kurulum, notebook sırası, API örnekleri, model metrik tablosu, proje durumu)
+- `ROADMAP.md`, `FINDINGS.md`, `CHALLENGE.md` ile birlikte teslim paketi
+
+---
+
+## Sonraki Adımlar (isteğe bağlı)
+
+- **Aşama 8 — Docker** ⬜: `Dockerfile`, istenirse `docker-compose`
+- **Aşama 9 — Basit arayüz** ⬜: örn. Streamlit / Gradio
+
+---
+
+*Son güncelleme: Aşamalar 1–7 tamam; isteğe bağlı Docker ve arayüz sırada. GitHub: [canbmaj7/churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)*

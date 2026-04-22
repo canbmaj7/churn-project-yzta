@@ -68,3 +68,9 @@ Model geliştirme sürecinden sonra, bu modelin bir servis haline getirilmesi ge
 ## SONUÇ
 
 Bu çalışma, katılımcıların yalnızca model geliştirme becerisini değil, aynı zamanda bir makine öğrenmesi çözümünü uçtan uca bir sisteme dönüştürme yeteneğini ölçmeyi amaçlamaktadır.
+
+---
+
+## Bu depo ile uyum (durum notu)
+
+Orijinal metin yukarıdaki gereksinimleri tanımlar. Bu depoda: EDA ve ön işleme notebook’ları, çoklu model karşılaştırması, `model_registry.json` / kayıtlı modeller, **FastAPI** (`api/app.py`, `POST /predict`) ve kök **dokümantasyon** (`README.md` vb.) mevcut **challenge kapsamındaki** çekirdek beklentileri karşılayacak şekilde ilerletilmiştir. Opsiyonel maddeler (Docker, ayrı bir arayüz) bu metinde olduğu gibi zorunlu değildir.

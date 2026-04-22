@@ -13,8 +13,8 @@
 | 3 | Veri Ön İşleme | ✅ |
 | 4 | Model Geliştirme ve Karşılaştırma | ✅ |
 | 5 | En İyi Modeli Kaydetme | ✅ |
-| 6 | API Servisi Geliştirme | ⬜ |
-| 7 | Dokümantasyon | ⬜ |
+| 6 | API Servisi Geliştirme | ✅ |
+| 7 | Dokümantasyon | ✅ |
 | 8 | (Opsiyonel) Docker | ⬜ |
 | 9 | (Opsiyonel) Basit Arayüz | ⬜ |
 
@@ -27,12 +27,12 @@
 Projeyi başlatmadan önce temiz ve anlaşılır bir klasör yapısı oluştur:
 
 ```
-churn-project-yzta 2/          ← proje kökü
+churn-project-yzta/            ← proje kökü (klasör adı kopyaya göre değişebilir)
 │
 ├── data/
 │   ├── WA_Fn-UseC_-Telco-Customer-Churn.xls   ← ham veri
 │   └── processed/
-│       └── train_test_split.pkl               ← 02_preprocessing sonrası (joblib)
+│       └── train_test_split.pkl               ← 02_preprocessing sonrası
 │
 ├── notebooks/
 │   ├── 01_eda.ipynb          ← Keşifsel Veri Analizi
@@ -42,7 +42,7 @@ churn-project-yzta 2/          ← proje kökü
 ├── models/
 │   ├── .gitkeep
 │   ├── best_model.pkl        ← seçilen en iyi model (XGBoost)
-│   ├── model_registry.json  ← tüm modellerin test metrikleri ve dosya yolları
+│   ├── model_registry.json   ← tüm modellerin test metrikleri ve dosya yolları
 │   └── saved/                ← her modelin .joblib kopyası
 │       ├── LogisticRegression.joblib
 │       ├── RandomForest.joblib
@@ -50,14 +50,18 @@ churn-project-yzta 2/          ← proje kökü
 │       ├── XGBoost.joblib
 │       └── LightGBM.joblib
 │
+├── api/
+│   └── app.py                ← FastAPI: GET `/`, POST `/predict`
+│
 ├── requirements.txt
+├── README.md
 ├── CHALLENGE.md
 ├── FINDINGS.md
 ├── .gitignore
 └── ROADMAP.md
 ```
 
-Kökte ayrıca `README.md` (şablon) eklenebilir. Ön işleme ve model adımları `notebooks/` altında. Bu kopyada `src/` veya `scripts/` klasörü yok; `api/` henüz eklenmedi (Aşama 6). Sanal ortam klasörü (örn. `.venv/`) yerelde bulunur ve `.gitignore` ile dışlanır; ağaçta gösterilmez.
+Ön işleme ve model adımları `notebooks/` altında. `api/app.py` ile Aşama 6 tamamlandı. Bu depoda ayrı bir `src/` veya `scripts/` klasörü yok. Sanal ortam (örn. `venv/`, `.venv/`) yerelde bulunur; `.gitignore` ile dışlanır, ağaçta gösterilmez.
 
 ### 1.2 Sanal Ortam ve Bağımlılıklar
 
@@ -306,7 +310,9 @@ API'nin en az şu endpoint'leri içermesi gerekir:
 
 ### 6.3 `/predict` Endpoint'i
 
-**Girdi (Input):** Müşteri bilgilerini JSON formatında al. Örnek:
+**Not (bu depo):** `api/app.py` istemci tarafında ön işleme **beklemez**; gövde, `02_preprocessing` / `model_registry.json` içindeki `feature_columns` ile aynı 30 alanlı, sayısallaştırılmış/kukla sütunları içerir. Aşağıdaki ham alan örneği challenge şablonudur; tam örnek için `README.md` ve `/docs` şemasına bak.
+
+**Girdi (Input) — genel challenge örneği (ham alanlar):** Müşteri bilgilerini JSON formatında al. Örnek:
 ```json
 {
   "gender": "Female",
@@ -410,14 +416,14 @@ Bir `app_ui.py` dosyası oluştur. Şunları içersin:
 
 ## Kontrol Listesi (Teslim Öncesi)
 
-- [ ] Klasör yapısı düzenli mi?
-- [ ] `requirements.txt` güncel mi?
-- [ ] EDA notebook'u çalışıyor mu?
-- [ ] Ön işleme adımları doğru uygulandı mı?
-- [ ] En az 3 model karşılaştırıldı mı?
-- [ ] Model `models/` klasörüne kaydedildi mi?
-- [ ] API çalışıyor ve `/predict` endpoint'i doğru cevap veriyor mu?
-- [ ] `README.md` hazır mı?
+- [x] Klasör yapısı düzenli mi?
+- [x] `requirements.txt` güncel mi?
+- [x] EDA notebook'u çalışıyor mu?
+- [x] Ön işleme adımları doğru uygulandı mı?
+- [x] En az 3 model karşılaştırıldı mı?
+- [x] Model `models/` klasörüne kaydedildi mi?
+- [x] API çalışıyor ve `/predict` endpoint'i doğru cevap veriyor mu?
+- [x] `README.md` hazır mı?
 - [ ] Git commit'leri düzenli mi?
 
 ---
@@ -431,4 +437,4 @@ Bir `app_ui.py` dosyası oluştur. Şunları içersin:
 
 ---
 
-*Son güncelleme: Aşamalar 1–5 (yapı, EDA, ön işleme, modelleme, model kaydı) bu kopya için tamam; sırada API (`api/app.py`) ve dokümantasyon. Repo: [canbmaj7/churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)*
+*Son güncelleme: Aşamalar 1–7 (yapı, EDA, ön işleme, modelleme, model kaydı, FastAPI, kök dokümantasyon) tamam; sırada isteğe bağlı Docker ve arayüz. Repo: [canbmaj7/churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)*
