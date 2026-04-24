@@ -307,10 +307,3 @@ Bu proje bir veri bilimi challenge'ı kapsamında geliştirilmektedir. Geri bild
 ---
 
 *Detaylı yol haritası için [ROADMAP.md](ROADMAP.md) dosyasına, bulgular için [FINDINGS.md](FINDINGS.md) dosyasına bakınız.*
-
----
-
-## Geliştirici
-
-- **GitHub:** [@canbmaj7](https://github.com/canbmaj7) — [churn-project-yzta](https://github.com/canbmaj7/churn-project-yzta)
-- **İletişim:** ahmetcanotlu@gmail.com

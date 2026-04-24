@@ -33,7 +33,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     gender = st.selectbox("gender", ["Female", "Male"])
-    senior = st.selectbox("SeniorCitizen", [0, 1])
+    senior = st.selectbox("SeniorCitizen", ["No", "Yes"])
     partner = st.selectbox("Partner", ["Yes", "No"])
     dependents = st.selectbox("Dependents", ["Yes", "No"])
     tenure = st.number_input("tenure (ay)", min_value=0, max_value=100, value=12)
@@ -70,7 +70,7 @@ with col2:
 
 payload = {
     "gender": gender,
-    "SeniorCitizen": int(senior),
+    "SeniorCitizen": int(senior == "Yes"),
     "Partner": partner,
     "Dependents": dependents,
     "tenure": int(tenure),
