@@ -307,3 +307,6 @@ Bu proje bir veri bilimi challenge'ı kapsamında geliştirilmektedir. Geri bild
 ---
 
 *Detaylı yol haritası için [ROADMAP.md](ROADMAP.md) dosyasına, bulgular için [FINDINGS.md](FINDINGS.md) dosyasına bakınız.*
+
+# UI = https://churn-project-yzta.streamlit.app/
+# API = https://churn-project-yzta.onrender.com/
